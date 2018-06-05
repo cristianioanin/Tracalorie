@@ -1,0 +1,18 @@
+td {
+  padding: 0;
+  color: white;
+}
+
+#first-td {
+  border-top-left-radius: 0.25rem;
+  border-bottom-left-radius: 0.25rem;
+}
+
+#last-td {
+  border-top-right-radius: 0.25rem;
+  border-bottom-right-radius: 0.25rem;
+}
+
+.detailed-calories {
+  margin-top: 0.25rem;
+}
