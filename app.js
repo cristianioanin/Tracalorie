@@ -33,65 +33,6 @@ const APIController = (function () {
   }
 })();
 
-// ITEM CONTROLLER
-const ItemController = (function (APICtrl) {
-  // Item constructor
-  const Item = function (id, name, calories, quantity) {
-    this.id = id;
-    this.name = name;
-    this.calories = calories;
-    this.quantity = quantity;
-  }
-
-  // Data Structure / State
-  const data = {
-    items: [
-      { id: 0, name: 'Cheese', calories: { energy: 406.0, protein: 24.04, fat: 33.82, carbs: 1.33 } },
-      { id: 1, name: 'Cookie', calories: { energy: 1200, protein: 55, fat: 120, carbs: 26 } },
-      { id: 2, name: 'Eggs', calories: { energy: 650, protein: 15, fat: 25, carbs: 18 } }
-    ],
-    currentItem: null,
-    totalCalories: 0
-  }
-
-  return {
-    getItems: function () {
-      return data.items;
-    },
-
-    addItem: function (name, quantity) {
-      APICtrl.getAPIResponse(name).then(result => {
-        const nutrients = result.hints[0].food.nutrients;
-        const calories = APICtrl.newCaloriesObject(nutrients);
-
-        // Create ID
-        let ID;
-
-        if (data.items.length > 0) {
-          ID = data.items[data.items.length - 1].id + 1;
-        } else {
-          ID = 0;
-        }
-
-        // Quantity to Number
-        quantity = parseInt(quantity);
-
-        // Create new item
-        newItem = new Item(ID, name, calories, quantity);
-
-        // Add the newly created item to the data structure
-        data.items.push(newItem);
-
-        return newItem;
-      });
-    },
-
-    logData: function () {
-      return data;
-    }
-  }
-})(APIController);
-
 
 // UI CONTROLLER
 const UIController = (function () {
@@ -120,17 +61,25 @@ const UIController = (function () {
     }
 
     return percentage;
-  }
+  };
+
+  function URLEncode(string) {
+    return string.replace(' ', '%20');
+  };
+
+  function URLDecode(string) {
+    return string.replace('%20', ' ');
+  };
 
   return {
     populateItemList: function (items) {
       let html = '';
 
       items.forEach(item => {
-        this.calories = item.calories.energy;
-        this.fat = item.calories.fat;
-        this.carbs = item.calories.carbs;
-        this.protein = item.calories.protein;
+        this.calories = item.calories.energy === undefined ? 0 : item.calories.energy;
+        this.fat = item.calories.fat === undefined ? 0 : item.calories.fat;
+        this.carbs = item.calories.carbs === undefined ? 0 : item.calories.carbs;
+        this.protein = item.calories.protein === undefined ? 0 : item.calories.protein;
 
         html += `
         <li class="collection-item" id="item-${item.id}">
@@ -141,20 +90,19 @@ const UIController = (function () {
           <strong>
             <em class="pull-right">${this.calories} Calories</em>
           </strong>          
-            <table class="striped">
-              <tr>
-                <td class="red lighten-4 center-align" style="width:${nutritionBar(this.calories, 'fat', this.fat)}%" id="first-td">Fat
-                <span>${this.fat} g</span>
-                </td>
-                <td class="orange lighten-4 center-align" style="width:${nutritionBar(this.calories, 'carbs', this.carbs)}%" id="middle-td">Carbs
-                <span>${this.carbs} g</span>
-                </td>
-                <td class="green lighten-4 center-align" style="width:${nutritionBar(this.calories, 'protein', this.protein)}%" id="last-td">Protein
-                <span>${this.protein} g</span>
-                </td>
-              </tr>
-            </table>
-          </div>
+          <table class="striped">
+            <tr>
+              <td class="red lighten-4 center-align" style="width:${nutritionBar(this.calories, 'fat', this.fat)}%" id="first-td">Fat
+              <span>${this.fat} g</span>
+              </td>
+              <td class="orange lighten-4 center-align" style="width:${nutritionBar(this.calories, 'carbs', this.carbs)}%" id="middle-td">Carbs
+              <span>${this.carbs} g</span>
+              </td>
+              <td class="green lighten-4 center-align" style="width:${nutritionBar(this.calories, 'protein', this.protein)}%" id="last-td">Protein
+              <span>${this.protein} g</span>
+              </td>
+            </tr>
+          </table>
         </li>
         `;
       });
@@ -165,9 +113,64 @@ const UIController = (function () {
 
     getItemInput: function () {
       return {
-        name: document.querySelector(UISelectors.itemNameInput).value,
+        name: URLEncode(document.querySelector(UISelectors.itemNameInput).value),
         quantity: document.querySelector(UISelectors.itemQuantityInput).value
       }
+    },
+
+    addListItem: function (item) {
+      this.calories = item.calories.energy === undefined ? 0 : item.calories.energy;
+      this.fat = item.calories.fat === undefined ? 0 : item.calories.fat;
+      this.carbs = item.calories.carbs === undefined ? 0 : item.calories.carbs;
+      this.protein = item.calories.protein === undefined ? 0 : item.calories.protein;
+
+      // Show the list
+      this.showList();
+
+      // Create <li> element
+      const li = document.createElement('li');
+      li.className = 'collection-item';
+      li.id = `item-${item.id}`;
+
+      // Add HTML
+      li.innerHTML = `
+        <strong>${URLDecode(item.name)}</strong>
+        <a href="#" class="secondary-content" style="margin-left:1rem">
+          <i class="edit-item fa fa-pencil"></i>
+        </a>
+        <strong>
+          <em class="pull-right">${Math.round(this.calories)} Calories</em>
+        </strong>
+        <table class="striped">
+        <tr>
+          <td class="red lighten-4 center-align" style="width:${nutritionBar(this.calories, 'fat', this.fat)}%" id="first-td">Fat
+          <span>${this.fat} g</span>
+          </td>
+          <td class="orange lighten-4 center-align" style="width:${nutritionBar(this.calories, 'carbs', this.carbs)}%" id="middle-td">Carbs
+          <span>${this.carbs} g</span>
+          </td>
+          <td class="green lighten-4 center-align" style="width:${nutritionBar(this.calories, 'protein', this.protein)}%" id="last-td">Protein
+          <span>${this.protein} g</span>
+          </td>
+        </tr>
+      </table>
+      `;
+
+      // Insert item
+      document.querySelector(UISelectors.itemList).insertAdjacentElement('beforeend', li);
+    },
+
+    clearInput: function () {
+      document.querySelector(UISelectors.itemNameInput).value = '';
+      document.querySelector(UISelectors.itemQuantityInput).value = '';
+    },
+
+    hideList: function () {
+      document.querySelector(UISelectors.itemList).style.display = 'none';
+    },
+
+    showList: function () {
+      document.querySelector(UISelectors.itemList).style.display = 'block';
     },
 
     getSelectors: function () {
@@ -175,6 +178,79 @@ const UIController = (function () {
     }
   }
 })();
+
+
+// ITEM CONTROLLER
+const ItemController = (function (APICtrl, UICtrl) {
+  // Item constructor
+  const Item = function (id, name, calories, quantity) {
+    this.id = id;
+    this.name = name;
+    this.calories = calories;
+    this.quantity = quantity;
+  }
+
+  // Data Structure / State
+  const data = {
+    items: [ /* array for holding data structure items */],
+    currentItem: null,
+    totalCalories: 0
+  }
+
+  return {
+    getItems: function () {
+      return data.items;
+    },
+
+    addItem: function (name, quantity) {
+      APICtrl.getAPIResponse(name).then(result => {
+        const nutrients = result.hints[0].food.nutrients;
+        console.log(nutrients);
+
+        // Quantity to Number
+        quantity = parseInt(quantity);
+
+        function ifQuantity(quantity, object) {
+          for (let key in object) {
+            if (quantity) {
+              object[key] = (object[key] * (quantity / 100)).toFixed(2);
+            } else {
+              object[key] = object[key].toFixed(2);
+            }
+          }
+
+          return object;
+        }
+
+        const calories = isNaN(quantity) ? APICtrl.newCaloriesObject(ifQuantity(quantity, nutrients)) : APICtrl.newCaloriesObject(ifQuantity(quantity, nutrients));
+
+        // Create ID
+        let ID;
+
+        if (data.items.length > 0) {
+          ID = data.items[data.items.length - 1].id + 1;
+        } else {
+          ID = 0;
+        }
+
+        // Create new item
+        const newItem = new Item(ID, name, calories, quantity);
+        console.log(newItem);
+
+        // Add the newly created item to the data structure
+        data.items.push(newItem);
+
+        UICtrl.addListItem(newItem);
+
+        return newItem;
+      });
+    },
+
+    logData: function () {
+      return data;
+    }
+  }
+})(APIController, UIController);
 
 
 // MAIN APP CONTROLLER
@@ -201,8 +277,11 @@ const AppController = (function (ItemCtrl, APICtrl, UICtrl, StorageCtrl) {
     }
 
     if (input.name) {
-      // Add item
-      const newItem = ItemCtrl.addItem(input.name, input.quantity);
+      // Add item to the data structure and the UI
+      ItemCtrl.addItem(input.name, input.quantity);
+
+      // Clear input fields
+      UICtrl.clearInput();
     }
 
     e.preventDefault();
@@ -213,8 +292,13 @@ const AppController = (function (ItemCtrl, APICtrl, UICtrl, StorageCtrl) {
       // Get items from data structure
       const items = ItemCtrl.getItems();
 
-      // Render list with above items
-      UICtrl.populateItemList(items);
+      // Check if data structure holds any items
+      if (!items.length) {
+        UICtrl.hideList();
+      } else {
+        // Render list with above items
+        UICtrl.populateItemList(items);
+      }
 
       // Load event listeners
       loadEventListeners();
