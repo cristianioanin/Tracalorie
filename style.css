@@ -16,3 +16,9 @@ td {
 .detailed-calories {
   margin-top: 0.25rem;
 }
+
+.name__input::placeholder {
+  color: orangered;
+  transition: transform .2s;
+  transform: translateX(10px); 
+}

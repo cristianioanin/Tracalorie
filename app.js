@@ -17,21 +17,18 @@ const APIController = (function () {
     this.carbs = nutrients.CHOCDF; // g
   }
 
-  // Get calories from the Edamam API
-
-  const getAPIResponse = async function (food) {
-    const response = await fetch(`https://api.edamam.com/api/food-database/parser?ingr=${food}&app_id=${app_id}&app_key=${app_key}&page=0`);
-
-    const responseData = await response.json();
-    const nutrientsData = responseData.hints[0].food.nutrients;
-    const calories = new Calories(nutrientsData);
-
-    return calories;
-  }
-
   return {
-    getCalories: function (food) {
-      return getAPIResponse(food);
+    // Get calories from the Edamam API
+    getAPIResponse: async function (food) {
+      const response = await fetch(`https://api.edamam.com/api/food-database/parser?ingr=${food}&app_id=${app_id}&app_key=${app_key}&page=0`);
+
+      const responseData = await response.json();
+
+      return responseData;
+    },
+
+    newCaloriesObject: function (nutrients) {
+      return new Calories(nutrients);
     }
   }
 })();
@@ -39,10 +36,11 @@ const APIController = (function () {
 // ITEM CONTROLLER
 const ItemController = (function (APICtrl) {
   // Item constructor
-  const Item = function (id, name, calories) {
+  const Item = function (id, name, calories, quantity) {
     this.id = id;
     this.name = name;
     this.calories = calories;
+    this.quantity = quantity;
   }
 
   // Data Structure / State
@@ -61,6 +59,33 @@ const ItemController = (function (APICtrl) {
       return data.items;
     },
 
+    addItem: function (name, quantity) {
+      APICtrl.getAPIResponse(name).then(result => {
+        const nutrients = result.hints[0].food.nutrients;
+        const calories = APICtrl.newCaloriesObject(nutrients);
+
+        // Create ID
+        let ID;
+
+        if (data.items.length > 0) {
+          ID = data.items[data.items.length - 1].id + 1;
+        } else {
+          ID = 0;
+        }
+
+        // Quantity to Number
+        quantity = parseInt(quantity);
+
+        // Create new item
+        newItem = new Item(ID, name, calories, quantity);
+
+        // Add the newly created item to the data structure
+        data.items.push(newItem);
+
+        return newItem;
+      });
+    },
+
     logData: function () {
       return data;
     }
@@ -71,8 +96,12 @@ const ItemController = (function (APICtrl) {
 // UI CONTROLLER
 const UIController = (function () {
   const UISelectors = {
-    itemList: '#item-list'
+    itemList: '#item-list',
+    addBtn: '.add-btn',
+    itemNameInput: '#item-name',
+    itemQuantityInput: '#item-quantity'
   }
+
   const nutritionBar = function (totalCalories, nutrient, nutrientGrams) {
     let percentage;
 
@@ -132,6 +161,17 @@ const UIController = (function () {
 
       // Insert list items
       document.querySelector(UISelectors.itemList).innerHTML = html;
+    },
+
+    getItemInput: function () {
+      return {
+        name: document.querySelector(UISelectors.itemNameInput).value,
+        quantity: document.querySelector(UISelectors.itemQuantityInput).value
+      }
+    },
+
+    getSelectors: function () {
+      return UISelectors;
     }
   }
 })();
@@ -139,6 +179,35 @@ const UIController = (function () {
 
 // MAIN APP CONTROLLER
 const AppController = (function (ItemCtrl, APICtrl, UICtrl, StorageCtrl) {
+  const UISelectors = UICtrl.getSelectors();
+  // Load event-listeners
+  const loadEventListeners = function () {
+    // Item event
+    document.querySelector(UISelectors.addBtn).addEventListener('click', itemAddSubmit);
+  }
+
+  // Add item / submit
+  const itemAddSubmit = function (e) {
+    // Get form input from UI Controller
+    const input = UICtrl.getItemInput();
+
+    // Check for item name as required input
+    const element = document.querySelector(UISelectors.itemNameInput);
+    if (!element.value) {
+      element.classList.add('name__input');
+      setTimeout(() => {
+        element.classList.remove('name__input');
+      }, 1500);
+    }
+
+    if (input.name) {
+      // Add item
+      const newItem = ItemCtrl.addItem(input.name, input.quantity);
+    }
+
+    e.preventDefault();
+  }
+
   return {
     init: function () {
       // Get items from data structure
@@ -146,6 +215,9 @@ const AppController = (function (ItemCtrl, APICtrl, UICtrl, StorageCtrl) {
 
       // Render list with above items
       UICtrl.populateItemList(items);
+
+      // Load event listeners
+      loadEventListeners();
     }
   }
 })(ItemController, APIController, UIController, StorageController);
