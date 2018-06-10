@@ -46,7 +46,10 @@ const UIController = (function () {
     addIcon: '#add-icon',
     itemNameInput: '#item-name',
     itemQuantityInput: '#item-quantity',
-    totalCalories: '#total-calories'
+    totalCalories: '#total-calories',
+    totalFat: '#total-fat',
+    totalCarbs: '#total-carbs',
+    totalProtein: '#total-protein',
   }
 
   const nutritionBar = function (totalCalories, nutrient, nutrientGrams) {
@@ -56,14 +59,6 @@ const UIController = (function () {
       percentage = Math.round((nutrientGrams * 9) / totalCalories * 100);
     } else {
       percentage = Math.round((nutrientGrams * 4) / totalCalories * 100);
-    }
-
-    if (percentage >= 10 && percentage <= 80) {
-      percentage = percentage;
-    } else if (percentage < 10) {
-      percentage = 10;
-    } else if (percentage > 80) {
-      percentage = 80;
     }
 
     return percentage;
@@ -86,30 +81,110 @@ const UIController = (function () {
       this.carbs = item.calories.carbs === undefined ? 0 : item.calories.carbs;
       this.protein = item.calories.protein === undefined ? 0 : item.calories.protein;
 
-      markup += `
-      <li class="collection-item" id="item-${item.id}">
-        <strong>${URLDecode(item.name)}</strong>
-        <a href="#" class="secondary-content" style="margin-left:1rem">
-          <i class="edit-item fa fa-pencil"></i>
-        </a>
-        <strong>
-          <em class="pull-right">${Math.round(this.calories)} Calories</em>
-        </strong>          
-        <table class="striped">
-          <tr>
-            <td class="red lighten-4 center-align" style="width:${nutritionBar(this.calories, 'fat', this.fat)}%" id="first-td">Fat
-            <span>${this.fat} g</span>
-            </td>
-            <td class="orange lighten-4 center-align" style="width:${nutritionBar(this.calories, 'carbs', this.carbs)}%" id="middle-td">Carbs
-            <span>${this.carbs} g</span>
-            </td>
-            <td class="green lighten-4 center-align" style="width:${nutritionBar(this.calories, 'protein', this.protein)}%" id="last-td">Protein
-            <span>${this.protein} g</span>
-            </td>
-          </tr>
-        </table>
-      </li>
-      `;
+      if (this.fat && this.carbs && this.protein) {
+        markup += `
+          <li class="collection-item" id="item-${item.id}">
+            <strong>${URLDecode(item.name)}</strong>
+            <a href="#" class="secondary-content" style="margin-left:1rem">
+              <i class="edit-item fa fa-pencil"></i>
+            </a>
+            <strong>
+              <em class="pull-right">${Math.round(this.calories)} Calories</em>
+            </strong>          
+            <table class="striped">
+              <tr>
+                <td class="red lighten-1 center-align" style="width:${nutritionBar(this.calories, 'fat', this.fat)}%" id="first-td">
+                  <span>${Math.round(this.fat * 9)}</span>
+                </td>
+                <td class="orange lighten-1 center-align" style="width:${nutritionBar(this.calories, 'carbs', this.carbs)}%" id="middle-td">
+                  <span>${Math.round(this.carbs * 4)}</span>
+                </td>
+                <td class="green lighten-1 center-align" style="width:${nutritionBar(this.calories, 'protein', this.protein)}%" id="last-td">
+                  <span>${Math.round(this.protein * 4)}</span>
+                </td>
+              </tr>
+            </table>
+          </li>
+        `;
+      } else if (!this.fat && this.carbs && this.protein) {
+        markup += `
+          <li class="collection-item" id="item-${item.id}">
+            <strong>${URLDecode(item.name)}</strong>
+            <a href="#" class="secondary-content" style="margin-left:1rem">
+              <i class="edit-item fa fa-pencil"></i>
+            </a>
+            <strong>
+              <em class="pull-right">${Math.round(this.calories)} Calories</em>
+            </strong>          
+            <table class="striped">
+              <tr>
+                <td class="orange lighten-1 center-align" style="width:${nutritionBar(this.calories, 'carbs', this.carbs)}%" id="first-td">
+                  <span>${Math.round(this.carbs * 4)}</span>
+                </td>
+                <td class="green lighten-1 center-align" style="width:${nutritionBar(this.calories, 'protein', this.protein)}%" id="last-td">
+                  <span>${Math.round(this.protein * 4)}</span>
+                </td>
+              </tr>
+            </table>
+          </li>
+        `;
+      } else if (this.fat && !this.carbs && this.protein) {
+        markup += `
+          <li class="collection-item" id="item-${item.id}">
+            <strong>${URLDecode(item.name)}</strong>
+            <a href="#" class="secondary-content" style="margin-left:1rem">
+              <i class="edit-item fa fa-pencil"></i>
+            </a>
+            <strong>
+              <em class="pull-right">${Math.round(this.calories)} Calories</em>
+            </strong>          
+            <table class="striped">
+              <tr>
+                <td class="red lighten-1 center-align" style="width:${nutritionBar(this.calories, 'fat', this.fat)}%" id="first-td">
+                  <span>${Math.round(this.fat * 9)}</span>
+                </td>
+                <td class="green lighten-1 center-align" style="width:${nutritionBar(this.calories, 'protein', this.protein)}%" id="last-td">
+                  <span>${Math.round(this.protein * 4)}</span>
+                </td>
+              </tr>
+            </table>
+          </li>
+        `;
+      } else if (this.fat && this.carbs && !this.protein) {
+        markup += `
+          <li class="collection-item" id="item-${item.id}">
+            <strong>${URLDecode(item.name)}</strong>
+            <a href="#" class="secondary-content" style="margin-left:1rem">
+              <i class="edit-item fa fa-pencil"></i>
+            </a>
+            <strong>
+              <em class="pull-right">${Math.round(this.calories)} Calories</em>
+            </strong>          
+            <table class="striped">
+              <tr>
+                <td class="red lighten-1 center-align" style="width:${nutritionBar(this.calories, 'fat', this.fat)}%" id="first-td">
+                  <span>${Math.round(this.fat * 9)}</span>
+                </td>
+                <td class="orange lighten-1 center-align" style="width:${nutritionBar(this.calories, 'carbs', this.carbs)}%" id="last-td">
+                  <span>${Math.round(this.carbs * 4)}</span>
+                </td>
+              </tr>
+            </table>
+          </li>
+        `;
+      } else {
+        markup += `
+          <li class="collection-item" id="item-${item.id}">
+            <strong>${URLDecode(item.name)}</strong>
+            <a href="#" class="secondary-content" style="margin-left:1rem">
+              <i class="edit-item fa fa-pencil"></i>
+            </a>
+            <strong>
+              <em class="pull-right">${Math.round(this.calories)} Calories</em>
+            </strong>
+          </li>
+        `;
+      }
 
       return markup;
     },
@@ -177,7 +252,10 @@ const UIController = (function () {
     },
 
     showTotalCalories: function (totalCalories) {
-      document.querySelector(UISelectors.totalCalories).textContent = totalCalories;
+      document.querySelector(UISelectors.totalCalories).textContent = Math.round(totalCalories.data.totalCalories);
+      document.querySelector(UISelectors.totalFat).textContent = (totalCalories.data.totalFat).toFixed(2);
+      document.querySelector(UISelectors.totalCarbs).textContent = (totalCalories.data.totalCarbs).toFixed(2);
+      document.querySelector(UISelectors.totalProtein).textContent = (totalCalories.data.totalProtein).toFixed(2);
     },
 
     clearEditState: function () {
@@ -219,7 +297,10 @@ const ItemController = (function (APICtrl, UICtrl) {
   const data = {
     items: [ /* array for holding data structure items */],
     currentItem: null,
-    totalCalories: 0
+    totalCalories: 0,
+    totalFat: 0,
+    totalCarbs: 0,
+    totalProtein: 0
   }
 
   return {
@@ -277,6 +358,7 @@ const ItemController = (function (APICtrl, UICtrl) {
 
         // Get total Calories
         const totalCalories = this.getTotalCalories();
+
         // Add total calories to the UI
         UICtrl.showTotalCalories(totalCalories);
 
@@ -335,16 +417,25 @@ const ItemController = (function (APICtrl, UICtrl) {
     },
 
     getTotalCalories: function () {
-      let total = 0;
+      let calories = 0,
+        fat = 0,
+        carbs = 0,
+        protein = 0;
 
       data.items.forEach(item => {
-        total += Number(item.calories.energy);
+        calories += isNaN(Number(item.calories.energy)) ? 0 : Number(item.calories.energy);
+        fat += isNaN(Number(item.calories.fat)) ? 0 : Number(item.calories.fat);
+        carbs += isNaN(Number(item.calories.carbs)) ? 0 : Number(item.calories.carbs);
+        protein += isNaN(Number(item.calories.protein)) ? 0 : Number(item.calories.protein);
       });
 
       // Set total calories in data structure
-      data.totalCalories = total;
+      data.totalCalories = calories;
+      data.totalFat = fat;
+      data.totalCarbs = carbs;
+      data.totalProtein = protein;
 
-      return data.totalCalories;
+      return { totalCalories, totalFat, totalCarbs, totalProtein } = { data };
     },
 
     logData: function () {

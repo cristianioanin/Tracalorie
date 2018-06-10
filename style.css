@@ -22,3 +22,21 @@ td {
   transition: transform .2s;
   transform: translateX(10px); 
 }
+
+.total-fat {
+  color: orangered;
+  font-weight: 600;
+  font-size: 1.5rem;
+}
+
+.total-carbs {
+  color: orange;
+  font-weight: 600;
+  font-size: 1.5rem;
+}
+
+.total-protein {
+  color: green;
+  font-weight: 600;
+  font-size: 1.5rem;
+}
