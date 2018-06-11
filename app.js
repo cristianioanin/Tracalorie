@@ -1,6 +1,66 @@
 // STORAGE CONTROLLER
 const StorageController = (function () {
+  return {
+    storeItem: function (item) {
+      let items;
 
+      // Check if any items in localStorage
+      if (localStorage.getItem('items') === null) {
+        items = [];
+        items.push(item);
+        // Set LS
+        localStorage.setItem('items', JSON.stringify(items));
+      } else {
+        items = JSON.parse(localStorage.getItem('items'));
+
+        items.push(item);
+        // Reset LS
+        localStorage.setItem('items', JSON.stringify(items));
+      }
+    },
+
+    getItemsFromStorage: function () {
+      let items;
+
+      if (localStorage.getItem('items') === null) {
+        items = [];
+      } else {
+        items = JSON.parse(localStorage.getItem('items'));
+      }
+
+      return items;
+    },
+
+    updateItemStorage: function (updatedItem) {
+      let items = JSON.parse(localStorage.getItem('items'));
+
+      items.forEach((item, index) => {
+        if (updatedItem.id === item.id) {
+          items.splice(index, 1, updatedItem);
+        }
+      });
+
+      // Reset LS
+      localStorage.setItem('items', JSON.stringify(items));
+    },
+
+    deleteItemFromStorage: function (id) {
+      let items = JSON.parse(localStorage.getItem('items'));
+
+      items.forEach((item, index) => {
+        if (item.id === id) {
+          items.splice(index, 1);
+        }
+      });
+
+      // Reset LS
+      localStorage.setItem('items', JSON.stringify(items));
+    },
+
+    clearItemsFromStorage: function () {
+      localStorage.removeItem('items');
+    }
+  }
 })();
 
 
@@ -74,8 +134,8 @@ const UIController = (function () {
   };
 
   return {
-    renderItemToDOM: function (item) {
-      let markup = '';
+    renderItemToDOM: function (item, markupType) {
+      let markup = markupType === 'HTML' ? `<li class="collection-item" id="item-${item.id}">` : '';
 
       this.calories = item.calories.energy === undefined ? 0 : item.calories.energy;
       this.fat = item.calories.fat === undefined ? 0 : item.calories.fat;
@@ -84,108 +144,100 @@ const UIController = (function () {
 
       if (this.fat && this.carbs && this.protein) {
         markup += `
-          <li class="collection-item" id="item-${item.id}">
-            <strong>${URLDecode(item.name)}</strong>
-            <a href="#" class="secondary-content" style="margin-left:1rem">
-              <i class="edit-item fa fa-pencil"></i>
-            </a>
-            <strong>
-              <em class="pull-right">${Math.round(this.calories)} Calories</em>
-            </strong>          
-            <table class="striped">
-              <tr>
-                <td class="red lighten-1 center-align" style="width:${nutritionBar(this.calories, 'fat', this.fat)}%" id="first-td">
-                  <span>${Math.round(this.fat * 9)}</span>
-                </td>
-                <td class="orange lighten-1 center-align" style="width:${nutritionBar(this.calories, 'carbs', this.carbs)}%" id="middle-td">
-                  <span>${Math.round(this.carbs * 4)}</span>
-                </td>
-                <td class="green lighten-1 center-align" style="width:${nutritionBar(this.calories, 'protein', this.protein)}%" id="last-td">
-                  <span>${Math.round(this.protein * 4)}</span>
-                </td>
-              </tr>
-            </table>
-          </li>
+          <strong>${URLDecode(item.name)}</strong>
+          <a href="#" class="secondary-content" style="margin-left:1rem">
+            <i class="edit-item fa fa-pencil"></i>
+          </a>
+          <strong>
+            <em class="pull-right">${Math.round(this.calories)} Calories</em>
+          </strong>          
+          <table class="striped">
+            <tr>
+              <td class="red lighten-1 center-align" style="width:${nutritionBar(this.calories, 'fat', this.fat)}%" id="first-td">
+                <span>${Math.round(this.fat * 9)}</span>
+              </td>
+              <td class="orange lighten-1 center-align" style="width:${nutritionBar(this.calories, 'carbs', this.carbs)}%" id="middle-td">
+                <span>${Math.round(this.carbs * 4)}</span>
+              </td>
+              <td class="green lighten-1 center-align" style="width:${nutritionBar(this.calories, 'protein', this.protein)}%" id="last-td">
+                <span>${Math.round(this.protein * 4)}</span>
+              </td>
+            </tr>
+          </table>
         `;
       } else if (!this.fat && this.carbs && this.protein) {
         markup += `
-          <li class="collection-item" id="item-${item.id}">
-            <strong>${URLDecode(item.name)}</strong>
-            <a href="#" class="secondary-content" style="margin-left:1rem">
-              <i class="edit-item fa fa-pencil"></i>
-            </a>
-            <strong>
-              <em class="pull-right">${Math.round(this.calories)} Calories</em>
-            </strong>          
-            <table class="striped">
-              <tr>
-                <td class="orange lighten-1 center-align" style="width:${nutritionBar(this.calories, 'carbs', this.carbs)}%" id="first-td">
-                  <span>${Math.round(this.carbs * 4)}</span>
-                </td>
-                <td class="green lighten-1 center-align" style="width:${nutritionBar(this.calories, 'protein', this.protein)}%" id="last-td">
-                  <span>${Math.round(this.protein * 4)}</span>
-                </td>
-              </tr>
-            </table>
-          </li>
+          <strong>${URLDecode(item.name)}</strong>
+          <a href="#" class="secondary-content" style="margin-left:1rem">
+            <i class="edit-item fa fa-pencil"></i>
+          </a>
+          <strong>
+            <em class="pull-right">${Math.round(this.calories)} Calories</em>
+          </strong>          
+          <table class="striped">
+            <tr>
+              <td class="orange lighten-1 center-align" style="width:${nutritionBar(this.calories, 'carbs', this.carbs)}%" id="first-td">
+                <span>${Math.round(this.carbs * 4)}</span>
+              </td>
+              <td class="green lighten-1 center-align" style="width:${nutritionBar(this.calories, 'protein', this.protein)}%" id="last-td">
+                <span>${Math.round(this.protein * 4)}</span>
+              </td>
+            </tr>
+          </table>
         `;
       } else if (this.fat && !this.carbs && this.protein) {
         markup += `
-          <li class="collection-item" id="item-${item.id}">
-            <strong>${URLDecode(item.name)}</strong>
-            <a href="#" class="secondary-content" style="margin-left:1rem">
-              <i class="edit-item fa fa-pencil"></i>
-            </a>
-            <strong>
-              <em class="pull-right">${Math.round(this.calories)} Calories</em>
-            </strong>          
-            <table class="striped">
-              <tr>
-                <td class="red lighten-1 center-align" style="width:${nutritionBar(this.calories, 'fat', this.fat)}%" id="first-td">
-                  <span>${Math.round(this.fat * 9)}</span>
-                </td>
-                <td class="green lighten-1 center-align" style="width:${nutritionBar(this.calories, 'protein', this.protein)}%" id="last-td">
-                  <span>${Math.round(this.protein * 4)}</span>
-                </td>
-              </tr>
-            </table>
-          </li>
+          <strong>${URLDecode(item.name)}</strong>
+          <a href="#" class="secondary-content" style="margin-left:1rem">
+            <i class="edit-item fa fa-pencil"></i>
+          </a>
+          <strong>
+            <em class="pull-right">${Math.round(this.calories)} Calories</em>
+          </strong>          
+          <table class="striped">
+            <tr>
+              <td class="red lighten-1 center-align" style="width:${nutritionBar(this.calories, 'fat', this.fat)}%" id="first-td">
+                <span>${Math.round(this.fat * 9)}</span>
+              </td>
+              <td class="green lighten-1 center-align" style="width:${nutritionBar(this.calories, 'protein', this.protein)}%" id="last-td">
+                <span>${Math.round(this.protein * 4)}</span>
+              </td>
+            </tr>
+          </table>
         `;
       } else if (this.fat && this.carbs && !this.protein) {
         markup += `
-          <li class="collection-item" id="item-${item.id}">
-            <strong>${URLDecode(item.name)}</strong>
-            <a href="#" class="secondary-content" style="margin-left:1rem">
-              <i class="edit-item fa fa-pencil"></i>
-            </a>
-            <strong>
-              <em class="pull-right">${Math.round(this.calories)} Calories</em>
-            </strong>          
-            <table class="striped">
-              <tr>
-                <td class="red lighten-1 center-align" style="width:${nutritionBar(this.calories, 'fat', this.fat)}%" id="first-td">
-                  <span>${Math.round(this.fat * 9)}</span>
-                </td>
-                <td class="orange lighten-1 center-align" style="width:${nutritionBar(this.calories, 'carbs', this.carbs)}%" id="last-td">
-                  <span>${Math.round(this.carbs * 4)}</span>
-                </td>
-              </tr>
-            </table>
-          </li>
+          <strong>${URLDecode(item.name)}</strong>
+          <a href="#" class="secondary-content" style="margin-left:1rem">
+            <i class="edit-item fa fa-pencil"></i>
+          </a>
+          <strong>
+            <em class="pull-right">${Math.round(this.calories)} Calories</em>
+          </strong>          
+          <table class="striped">
+            <tr>
+              <td class="red lighten-1 center-align" style="width:${nutritionBar(this.calories, 'fat', this.fat)}%" id="first-td">
+                <span>${Math.round(this.fat * 9)}</span>
+              </td>
+              <td class="orange lighten-1 center-align" style="width:${nutritionBar(this.calories, 'carbs', this.carbs)}%" id="last-td">
+                <span>${Math.round(this.carbs * 4)}</span>
+              </td>
+            </tr>
+          </table>
         `;
       } else {
         markup += `
-          <li class="collection-item" id="item-${item.id}">
-            <strong>${URLDecode(item.name)}</strong>
-            <a href="#" class="secondary-content" style="margin-left:1rem">
-              <i class="edit-item fa fa-pencil"></i>
-            </a>
-            <strong>
-              <em class="pull-right">${Math.round(this.calories)} Calories</em>
-            </strong>
-          </li>
+          <strong>${URLDecode(item.name)}</strong>
+          <a href="#" class="secondary-content" style="margin-left:1rem">
+            <i class="edit-item fa fa-pencil"></i>
+          </a>
+          <strong>
+            <em class="pull-right">${Math.round(this.calories)} Calories</em>
+          </strong>
         `;
       }
+
+      markup += markupType === 'HTML' ? '</li>' : '';
 
       return markup;
     },
@@ -194,7 +246,7 @@ const UIController = (function () {
       let html = '';
 
       items.forEach(item => {
-        html += this.renderItemToDOM(item);
+        html += this.renderItemToDOM(item, 'HTML');
       });
 
       // Insert list items
@@ -212,16 +264,11 @@ const UIController = (function () {
       // Show the list
       this.showList();
 
-      // Create <li> element
-      const li = document.createElement('li');
-      li.className = 'collection-item';
-      li.id = `item-${item.id}`;
-
       // Add HTML
-      li.innerHTML = this.renderItemToDOM(item);
+      const html = this.renderItemToDOM(item, 'HTML');
 
       // Insert item
-      document.querySelector(UISelectors.itemList).insertAdjacentElement('beforeend', li);
+      document.querySelector(UISelectors.itemList).insertAdjacentHTML('beforeend', html);
     },
 
     updateListItem: function (item) {
@@ -234,7 +281,7 @@ const UIController = (function () {
         const itemID = listItem.getAttribute('id');
 
         if (itemID === `item-${item.id}`) {
-          document.querySelector(`#${itemID}`).innerHTML = this.renderItemToDOM(item);
+          document.querySelector(`#${itemID}`).innerHTML = this.renderItemToDOM(item, 'Element');
         }
       });
     },
@@ -298,7 +345,7 @@ const UIController = (function () {
 
 
 // ITEM CONTROLLER
-const ItemController = (function (APICtrl, UICtrl) {
+const ItemController = (function (APICtrl, UICtrl, StorageCtrl) {
   const UISelectors = UICtrl.getSelectors();
 
   // Item constructor
@@ -311,7 +358,7 @@ const ItemController = (function (APICtrl, UICtrl) {
 
   // Data Structure / State
   const data = {
-    items: [ /* array for holding data structure items */],
+    items: StorageCtrl.getItemsFromStorage(),
     currentItem: null,
     totalCalories: 0,
     totalFat: 0,
@@ -327,7 +374,6 @@ const ItemController = (function (APICtrl, UICtrl) {
     addItem: function (name, quantity, updatingID) {
       APICtrl.getAPIResponse(name).then(result => {
         const nutrients = result.hints[0].food.nutrients;
-        console.log(nutrients);
 
         // Quantity to Number
         quantity = parseInt(quantity);
@@ -374,9 +420,16 @@ const ItemController = (function (APICtrl, UICtrl) {
 
         // Get total Calories
         const totalCalories = this.getTotalCalories();
-
         // Add total calories to the UI
         UICtrl.showTotalCalories(totalCalories);
+
+        if (updatingID === null) {
+          // Add to LS
+          StorageCtrl.storeItem(newItem);
+        } else {
+          // Update LS
+          StorageCtrl.updateItemStorage(newItem);
+        }
 
         // Remove spinner
         const UISelectors = UICtrl.getSelectors();
@@ -386,7 +439,7 @@ const ItemController = (function (APICtrl, UICtrl) {
 
         return newItem;
       })
-        .catch(error => console.log(`${error.name}: Input returned undefined`));
+        .catch(error => console.log(`${error.name}: ${error.message}`));
     },
 
     getItemById: function (id) {
@@ -480,7 +533,7 @@ const ItemController = (function (APICtrl, UICtrl) {
       return data;
     }
   }
-})(APIController, UIController);
+})(APIController, UIController, StorageController);
 
 
 // MAIN APP CONTROLLER
@@ -555,7 +608,7 @@ const AppController = (function (ItemCtrl, APICtrl, UICtrl, StorageCtrl) {
     const input = UICtrl.getItemInput();
 
     // Update item
-    const updatedItem = ItemCtrl.updateItem(input.name, input.quantity);
+    ItemCtrl.updateItem(input.name, input.quantity);
 
     // Clear Edit State
     UICtrl.clearEditState();
@@ -597,6 +650,9 @@ const AppController = (function (ItemCtrl, APICtrl, UICtrl, StorageCtrl) {
     // Delete from UI
     UICtrl.deleteListItem(currentItem.id);
 
+    // Delete from LS
+    StorageCtrl.deleteItemFromStorage(currentItem.id);
+
     UICtrl.clearEditState();
 
     e.preventDefault();
@@ -612,6 +668,8 @@ const AppController = (function (ItemCtrl, APICtrl, UICtrl, StorageCtrl) {
 
     // Remove all items from the UI
     UICtrl.removeItems();
+    // Remove all items from LS
+    StorageCtrl.clearItemsFromStorage();
 
     UICtrl.hideList();
   }
